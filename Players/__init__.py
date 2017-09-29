@@ -1,3 +1,4 @@
-from .Offense import Offense
-from .Defense import Defense
+from .Forward import Forward
+from .Midfielder import Midfielder
+from .Defender import Defender
 from .Goalkeeper import Goalkeeper
