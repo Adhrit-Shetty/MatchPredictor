@@ -6,31 +6,10 @@
 from random import randint, choice, random
 from operator import attrgetter, itemgetter
 from Players import Forward, Defender, Midfielder, Goalkeeper
+from Scaffolds import Team, Match
 
 id_key = attrgetter('id')
-
-class Team(): 
-    def __init__(self, id):
-        i, self.forwards, self.midfielders, self.defenders,self.goalkeeper = 1, [], [], [], None
-        self.id = id
-        for m in range(3):
-            self.forwards.append(Forward(i, randint(60, 100)))
-            i += 1
-        for m in range(4):
-            self.midfielders.append(Midfielder(i, randint(60, 100)))
-            i += 1
-        for m in range(3):
-            self.defenders.append(Defender(i, randint(60, 100)))
-            i += 1
-        self.goalkeeper = Goalkeeper(i, randint(60, 100))
     
-    def __str__(self):
-        return '\nTeam {} :'.format(self.id) + \
-        '\n\n~ Forwards ~ ' + '\n'.join([f.__str__() for f in self.forwards]) + \
-        '\n\n~ Midfielders ~ ' + '\n'.join([m.__str__() for m in self.midfielders]) + \
-        '\n\n~ Defenders ~ ' + '\n'.join([d.__str__() for d in self.defenders]) + \
-        '\n\n~ Goalkeeper ~' + '\n' + self.goalkeeper.__str__()
-
 def choose_player(team, keyword=None, id=None):
     type, obj, result = '', None, 2
     if id is None:
@@ -89,6 +68,13 @@ def foul(player_1, player_2):
         return True # Player_2 overpowers Player_1
     return False # Player_2 cannot overpower Player_1
 
+def penalty(forward, goalkeeper):
+    x1 = 0.7*forward.penalty_conversion + 0.2*random() #+0.1*Team Advantage
+    x2 = 0.7*goalkeeper.penalty_stopping + 0.2*random() #+0.1*Team Advantage
+    if x1 > x2:
+        return True # Golaazooo!
+    return False # Goal saved!
+
 if __name__ == "__main__":
     print('\n\n\n\n')
     team_1, team_2, play_count  = Team(1), Team(2), 0
@@ -114,6 +100,11 @@ if __name__ == "__main__":
                     foul_committed_keeper = foul(current_player, opposing_player)
                     if foul_committed_keeper:
                         print('Foul committed by Goalkeeper. Penalty!')
+                        penalty_scored = penalty(current_player, opposing_player)
+                        if penalty_scored:
+                            print('Golaazooo!')
+                        else:
+                            print('Goal saved!')
                     else:
                         print('Player shoots!')
                         goal_possible = action_complete(current_player_type, current_player, opposing_player_type, opposing_player)
@@ -121,19 +112,20 @@ if __name__ == "__main__":
                             print('Golaazooo!')
                         else:
                             print('Goal saved!')
-                        # Swap
-                        play_count += 1
-                        current_team, opposing_team = opposing_team, current_team
-                        current_player_obj = choose_player(current_team, keyword='defender')
-                        current_player_id, current_player_type, current_player = current_player_obj
-                        print('New current team id - {}'.format(current_team.id))
-                        print('Play ends. Possession switch. NEXT play.\n\n\n\n')
+                    # Possession switch
+                    play_count += 1
+                    current_team, opposing_team = opposing_team, current_team
+                    current_player_obj = choose_player(current_team, keyword='defender')
+                    current_player_id, current_player_type, current_player = current_player_obj
+                    print('New current team id - {}'.format(current_team.id))
+                    print('Play ends. Possession switch. NEXT play.\n\n\n\n')
                 else:
                     print('Pass completed to next line of action.')
                     current_player_obj = choose_player(current_team, keyword=next_line_of_action(current_player_type))
                     current_player_id, current_player_type, current_player = current_player_obj
                     print('New Current player in line - {}'.format(current_player_type))
             else:
+                # Possession switch
                 print('Lost Possession. Switching!')
                 current_team, opposing_team = opposing_team, current_team
                 current_player, current_player_type, current_player_id = opposing_player, opposing_player_type, opposing_player_id
