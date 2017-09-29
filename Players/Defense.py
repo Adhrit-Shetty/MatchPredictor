@@ -4,19 +4,20 @@
     of a generic Defense player.
 """
 
-class Defense():
-    def __init__(self, id, rating, key_interceptions, clearances, tackles_won, ball_retrieval, fouls_conceded, penalty_conversion):
-        self.id = id
-        self.rating = rating
-        self.key_interceptions = key_interceptions
-        self.clearances = clearances 
-        self.tackles_won = tackles_won
-        self.ball_retrieval = ball_retrieval
-        self.fouls_conceded = fouls_conceded 
-        self.penalty_conversion = penalty_conversion
+from .Player import Player
+
+class Defense(Player):
+    def __init__(self, id, rating):
+        super().__init__(id, rating)
+        self.key_interceptions = 0
+        self.clearances = 0 
+        self.tackles_won = 0
+        self.ball_retrieval = 0
+        self.fouls_conceded = 0 
+        self.penalty_conversion = 0
     
     def __str__(self):
-        return '\nPlayer {} (Defense) :'.format(self.id) + \
+        return '\nPlayer {} (Defense) [{}]:'.format(self.id, self.rating) + \
         '\nKey Interceptions = {}'.format(self.key_interceptions) + \
         '\nClearances = {}'.format(self.clearances) + \
         '\nTackles Won = {}'.format(self.tackles_won) + \
