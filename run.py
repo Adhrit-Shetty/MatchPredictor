@@ -117,13 +117,13 @@ if __name__ == "__main__":
                             print('Golaazooo')
                         else:
                             print('Goal saved')
-                            # Swap
-                            temp = current_team
-                            current_team = opposing_team
-                            opposing_team = temp
-                            current_player_obj = choose_player(current_team, keyword='defender')
-                            current_player_id, current_player_type, current_player = current_player_obj
-                            continue
+                        # Swap
+                        temp = current_team
+                        current_team = opposing_team
+                        opposing_team = temp
+                        current_player_obj = choose_player(current_team, keyword='defender')
+                        current_player_id, current_player_type, current_player = current_player_obj
+                        continue
                 else:
                     print('Pass completed to next line')
                     current_player_obj = choose_player(current_team, keyword=next_line_of_action(current_player_type))
@@ -131,5 +131,5 @@ if __name__ == "__main__":
                     print(current_player_obj)
         elif foul_committed:
             pass
-        if i == 2:
+        if i == 4:
             break
