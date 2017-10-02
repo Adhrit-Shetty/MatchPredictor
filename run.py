@@ -3,10 +3,12 @@
     Logic script to simulate matches and prediction
 """
 
+import sys
 from random import randint, choice, random
 from operator import attrgetter, itemgetter
-from Players import Forward, Defender, Midfielder, Goalkeeper
-from Scaffolds import Team, Match
+
+from Players import Player, Forward, Defender, Midfielder, Goalkeeper
+from Scaffolds import Team, TeamStatistics, MatchStatistics
 
 id_key = attrgetter('id')
     
@@ -74,63 +76,105 @@ def penalty(forward, goalkeeper):
     if x1 > x2:
         return True # Golaazooo!
     return False # Goal saved!
-
+    
 if __name__ == "__main__":
     print('\n\n\n\n')
-    team_1, team_2, play_count  = Team(1), Team(2), 0
-    current_team, opposing_team = team_1, team_2
-    print('Current team id - {}'.format(current_team.id))
-    current_player_id, current_player_type, current_player = choose_player(current_team, keyword='defender')
-    # print(action_complete(team_1.forwards[0], team_1.goalkeeper))
-    while True:
-        opposing_player_id = 11 - current_player_id
-        opposing_player_type, opposing_player = choose_player(opposing_team, id=opposing_player_id)
-        foul_committed = foul(current_player, opposing_player)
-        print('~Foul value - {}~'.format(foul_committed))
-        # Checking if defending player commits foul
-        if not foul_committed:
-            print('No foul committed in defending.')
-            # Checking if current player with possession completes action against opposing player
-            action_possible = action_complete(current_player_type ,current_player, opposing_player_type, opposing_player)
-            if action_possible:
-                print('Action completion is possible.')
-                if current_player_type == 'forward':
-                    print('Forward takes on the Goalkeeper next!')
-                    opposing_player_type, opposing_player = choose_player(opposing_team, id=11) # Goalkeeper
-                    foul_committed_keeper = foul(current_player, opposing_player)
-                    if foul_committed_keeper:
-                        print('Foul committed by Goalkeeper. Penalty!')
-                        penalty_scored = penalty(current_player, opposing_player)
-                        if penalty_scored:
-                            print('Golaazooo!')
+    no_of_matches, no_of_plays = list(map(int, sys.argv[1:]))
+    team_1, team_2 = Team(1), Team(2)
+    team_1_stats, team_2_stats = TeamStatistics(1), TeamStatistics(2)
+    matches = []
+    for i in range(1, no_of_matches+1):
+        home_team_id = randint(1,2)
+        away_team_id = 1 if home_team_id == 2 else 2
+        toss_winner = randint(1, 2)
+        weather = 'rainy' if random() < 0.5 else 'clear'
+        if toss_winner == 1:
+            current_team, current_team_stats, opposing_team, opposing_team_stats = team_1, team_1_stats, team_2, team_2_stats
+        else:
+            current_team, current_team_stats, opposing_team, opposing_team_stats = team_2, team_2_stats, team_1, team_1_stats
+        print('Current team id - {}'.format(current_team.id))
+        play_count, goals = 0, {1:0, 2:0}
+        current_player_id, current_player_type, current_player = choose_player(current_team, keyword='defender')
+        while True:
+            opposing_player_id = 11 - current_player_id
+            opposing_player_type, opposing_player = choose_player(opposing_team, id=opposing_player_id)
+            foul_committed = foul(current_player, opposing_player)
+            print('~Foul value - {}~'.format(foul_committed))
+            # Checking if defending player commits foul
+            if not foul_committed:
+                print('No foul committed in defending.')
+                # Checking if current player with possession completes action against opposing player
+                action_possible = action_complete(current_player_type ,current_player, opposing_player_type, opposing_player)
+                if action_possible:
+                    opposing_team_stats.update(opposing_player_id, 'tackles', False)
+                    print('Action completion is possible.')
+                    if current_player_type == 'forward':
+                        print('Forward takes on the Goalkeeper next!')
+                        opposing_player_type, opposing_player = choose_player(opposing_team, id=11) # Goalkeeper
+                        foul_committed_keeper = foul(current_player, opposing_player)
+                        if foul_committed_keeper:
+                            print('Foul committed by Goalkeeper. Penalty!')
+                            penalty_scored = penalty(current_player, opposing_player)
+                            opposing_team_stats.update(11, 'tackles', 'foul')
+                            if penalty_scored:
+                                print('Golaazooo!')
+                                goals[current_team.id] += 1
+                                current_team_stats.update(current_player_id, 'penalties', True)
+                                opposing_team_stats.update(11, 'penalty_saves', False)
+                                print('\nScore - {}\n'.format(goals))
+                            else:
+                                print('Goal saved!')
+                                current_team_stats.update(current_player_id, 'penalties', False)
+                                opposing_team_stats.update(11, 'penalty_saves', True)
                         else:
-                            print('Goal saved!')
+                            print('Player shoots!')
+                            goal_possible = action_complete(current_player_type, current_player, opposing_player_type, opposing_player)
+                            if goal_possible:
+                                print('Golaazooo!')
+                                goals[current_team.id] += 1
+                                current_team_stats.update(current_player_id, 'shots', True)
+                                opposing_team_stats.update(11, 'saves', False)
+                                print('\nScore - {}\n'.format(goals))
+                            else:
+                                print('Goal saved!')
+                                current_team_stats.update(current_player_id, 'shots', False)
+                                opposing_team_stats.update(11, 'saves', True)
+                        # Possession switch
+                        play_count += 1
+                        current_team, opposing_team = opposing_team, current_team
+                        current_team_stats, opposing_team_stats = opposing_team_stats, current_team_stats
+                        current_player_obj = choose_player(current_team, keyword='defender')
+                        current_player_id, current_player_type, current_player = current_player_obj
+                        print('New current team id - {}'.format(current_team.id))
+                        print('Play ends. Possession switch. NEXT play.\n\n\n\n')
                     else:
-                        print('Player shoots!')
-                        goal_possible = action_complete(current_player_type, current_player, opposing_player_type, opposing_player)
-                        if goal_possible:
-                            print('Golaazooo!')
-                        else:
-                            print('Goal saved!')
-                    # Possession switch
-                    play_count += 1
-                    current_team, opposing_team = opposing_team, current_team
-                    current_player_obj = choose_player(current_team, keyword='defender')
-                    current_player_id, current_player_type, current_player = current_player_obj
-                    print('New current team id - {}'.format(current_team.id))
-                    print('Play ends. Possession switch. NEXT play.\n\n\n\n')
+                        print('Pass completed to next line of action.')
+                        current_team_stats.update(current_player_id, 'passes', True)
+                        current_player_obj = choose_player(current_team, keyword=next_line_of_action(current_player_type))
+                        current_player_id, current_player_type, current_player = current_player_obj
+                        print('New Current player in line - {}'.format(current_player_type))
                 else:
-                    print('Pass completed to next line of action.')
-                    current_player_obj = choose_player(current_team, keyword=next_line_of_action(current_player_type))
-                    current_player_id, current_player_type, current_player = current_player_obj
-                    print('New Current player in line - {}'.format(current_player_type))
-            else:
-                # Possession switch
-                print('Lost Possession. Switching!')
-                current_team, opposing_team = opposing_team, current_team
-                current_player, current_player_type, current_player_id = opposing_player, opposing_player_type, opposing_player_id
-                print('New current team id - {}'.format(current_team.id))
-        elif foul_committed:
-            continue # Current player gets to continue after foul
-        if play_count >= 5:
-            break
+                    # Possession switch
+                    current_team_stats.update(current_player_id, 'passes', False)
+                    opposing_team_stats.update(opposing_player_id, 'tackles', True)
+                    print('Lost Possession. Switching!')
+                    current_team, opposing_team = opposing_team, current_team
+                    current_team_stats, opposing_team_stats = opposing_team_stats, current_team_stats
+                    current_player, current_player_type, current_player_id = opposing_player, opposing_player_type, opposing_player_id
+                    print('New current team id - {}'.format(current_team.id))
+            elif foul_committed:
+                opposing_team_stats.update(opposing_player_id, 'tackles', 'foul')
+                continue # Current player gets to continue after foul
+            if play_count >= no_of_plays:
+                break
+        print('\nFinal score - {}\n'.format(goals))
+        matches.append(MatchStatistics(i, home_team_id, away_team_id, weather, toss_winner, 1 if goals[1] > goals[2] else 2, goals))
+        team_1.update(team_1_stats.stats)
+        team_2.update(team_2_stats.stats)
+    for m in matches:
+        print(m)
+
+    print(team_1)
+    print(team_1_stats)
+    print(team_2)
+    print(team_2_stats)
