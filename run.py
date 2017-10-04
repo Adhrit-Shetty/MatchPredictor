@@ -11,7 +11,7 @@ from Players import Player, Forward, Defender, Midfielder, Goalkeeper
 from Scaffolds import Team, TeamStatistics, MatchStatistics
 
 id_key = attrgetter('id')
-    
+
 def choose_player(team, keyword=None, id=None):
     type, obj, result = '', None, 2
     if id is None:
@@ -55,8 +55,8 @@ def action_complete(player_1_type, player_1, player_2_type, player_2):
     elif types ==  set(['forward', 'goalkeeper']):
         print('Forward v/s Goalkeeper')
         attr1, attr2 = 'chance_conversion', 'saves_to_attempts'
-    x1 = 0.7*attrgetter(attr1)(player_1) + 0.2*random() #+0.1*Team Advantage
-    x2 = 0.7*attrgetter(attr2)(player_2) + 0.2*random() #+0.1*Team Advantage
+    x1 = 0.4*attrgetter(attr1)(player_1) + 0.4*random() #+0.1*Team Advantage
+    x2 = 0.4*attrgetter(attr2)(player_2) + 0.4*random() #+0.1*Team Advantage
     print('Attr = {:.02f}, {:.02f} | Comp = {:.02f}, {:.02f}'.format(attrgetter(attr1)(player_1), attrgetter(attr2)(player_2), x1, x2))
     if x1 > x2:
         return True
@@ -76,7 +76,88 @@ def penalty(forward, goalkeeper):
     if x1 > x2:
         return True # Golaazooo!
     return False # Goal saved!
-    
+
+
+# int teamAdvantageCalculator(current_match: match, prev_matches: match){
+#   home_ct1 = home_ct2 = 0;
+#   away_ct1 = away_ct2 = 0;
+#   rainy_ct1 = rainy_ct2 = 0;
+#   clear_ct1 = clear_ct2 = 0;
+#   toss_ct1 = toss_ct2 = 0;
+#   notoss_ct1 = notoss_ct2 = 0;
+#   for (match in prev_matches){
+#     if (match.winner == 1){
+#       if (match.home == 1)
+#           home_ct1 + +;
+#       else
+#           away_ct1 + +;
+#       if (match.weather == 'rainy')
+#           rainy_ct1 + +;
+#       else
+#           clear_ct1 + +;
+#       if (match.toss == 1)
+#           toss_ct1 + +;
+#       else
+#           notoss_ct1 + +;
+#   }
+#   else{
+#       if (match.home == 2)
+#           home_ct2 + +;
+#       else
+#           away_ct2 + +;
+#       if (match.weather == 'rainy')
+#           rainy_ct2 + +;
+#       else
+#           clear_ct2 + +;
+#       if (match.toss == 2)
+#           toss_ct2 + +;
+#       else
+#           notoss_ct2 + +;
+#   }
+#   total_matches + +;
+# }
+#
+# sum1 = 0.5 * team1.rating;
+# sum2 = 0.5 * team2.rating;
+#
+# if (current_match.home == 1){
+#   sum1 += 0.25 * home_ct1;
+#   sum2 += 0.25 * away_ct2;
+# }
+# else{
+#   sum1 += 0.25 * away_ct1;
+#   sum2 += 0.25 * home_ct2;
+# }
+# if (current_match.weather == 'rainy'){
+#   sum1 += 0.15 * rainy_ct1;
+#   sum2 += 0.15 * rainy_ct2;
+# }
+# else{
+#   sum1 += 0.15 * clear_ct1;
+#   sum2 += 0.15 * clear_ct2;
+# }
+# if (current_match.toss == 1){
+#   sum1 += 0.1 * toss_ct1;
+#   sum2 += 0.1 * notoss_ct2;
+# }
+# else{
+#   sum1 += 0.1 * notoss_ct1;
+#   sum2 += 0.1 * toss_ct2;
+# }
+#
+# if (sum1 > sum2){
+#   return 1;
+# }
+# else
+# if (sum2 > sum1){
+#   return 2;
+# }
+# else
+#   return 0;
+# return 1 means team_advantage of 1 will be 1 and 0 for zero;vice-versa if 2 returned;if 0 returned both have 0 team_advantage
+#}
+
+
 if __name__ == "__main__":
     print('\n\n\n\n')
     no_of_matches, no_of_plays = list(map(int, sys.argv[1:]))
