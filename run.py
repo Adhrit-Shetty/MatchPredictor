@@ -40,7 +40,7 @@ def next_line_of_action(type):
     elif type == 'midfielder':
         return 'forward'
 
-def action_complete(player_1_type, player_1, player_2_type, player_2):
+def action_complete(player_1_type, player_1, team_advantage_1, player_2_type, player_2, team_advantage_2):
     x1, x2, attr1, attr2, types = 0, 0, '', '', set([player_1_type, player_2_type])
     if types == set(['midfielder', 'midfielder']):
         print('Midfielder v/s Midfielder')
@@ -55,9 +55,10 @@ def action_complete(player_1_type, player_1, player_2_type, player_2):
     elif types ==  set(['forward', 'goalkeeper']):
         print('Forward v/s Goalkeeper')
         attr1, attr2 = 'chance_conversion', 'saves_to_attempts'
-    x1 = 0.4*attrgetter(attr1)(player_1) + 0.4*random() #+0.1*Team Advantage
-    x2 = 0.4*attrgetter(attr2)(player_2) + 0.4*random() #+0.1*Team Advantage
-    print('Attr = {:.02f}, {:.02f} | Comp = {:.02f}, {:.02f}'.format(attrgetter(attr1)(player_1), attrgetter(attr2)(player_2), x1, x2))
+    x1 = 0.3*attrgetter(attr1)(player_1) + 0.40*random() + 0.05*team_advantage_1
+    x2 = 0.3*attrgetter(attr2)(player_2) + 0.40*random() + 0.05*team_advantage_2
+    print('Attr = {:.02f}, {:.02f} | Comp = {:.02f}, {:.02f} | {} {}'\
+        .format(attrgetter(attr1)(player_1), attrgetter(attr2)(player_2), x1, x2, team_advantage_1, team_advantage_2))
     if x1 > x2:
         return True
     return False
@@ -70,109 +71,104 @@ def foul(player_1, player_2):
         return True # Player_2 overpowers Player_1
     return False # Player_2 cannot overpower Player_1
 
-def penalty(forward, goalkeeper):
-    x1 = 0.7*forward.penalty_conversion + 0.2*random() #+0.1*Team Advantage
-    x2 = 0.7*goalkeeper.penalty_stopping + 0.2*random() #+0.1*Team Advantage
+def penalty(forward, goalkeeper, team_advantage_1, team_advantage_2):
+    x1 = 0.6*forward.penalty_conversion + 0.3*random() + 0.1*team_advantage_1
+    x2 = 0.6*goalkeeper.penalty_stopping + 0.3*random() + 0.1*team_advantage_2
     if x1 > x2:
         return True # Golaazooo!
     return False # Goal saved!
 
+def calculate_team_advantage(current_match, previous_matches):
+    home_ct1, home_ct2, away_ct1, away_ct2 = [0 for i in range(4)]
+    rainy_ct1, rainy_ct2, clear_ct1, clear_ct2 = [0 for i in range(4)]
+    toss_ct1, toss_ct2, notoss_ct1, notoss_ct2 = [0 for i in range(4)]
+    sum1, sum2 = 0, 0
 
-# int teamAdvantageCalculator(current_match: match, prev_matches: match){
-#   home_ct1 = home_ct2 = 0;
-#   away_ct1 = away_ct2 = 0;
-#   rainy_ct1 = rainy_ct2 = 0;
-#   clear_ct1 = clear_ct2 = 0;
-#   toss_ct1 = toss_ct2 = 0;
-#   notoss_ct1 = notoss_ct2 = 0;
-#   for (match in prev_matches){
-#     if (match.winner == 1){
-#       if (match.home == 1)
-#           home_ct1 + +;
-#       else
-#           away_ct1 + +;
-#       if (match.weather == 'rainy')
-#           rainy_ct1 + +;
-#       else
-#           clear_ct1 + +;
-#       if (match.toss == 1)
-#           toss_ct1 + +;
-#       else
-#           notoss_ct1 + +;
-#   }
-#   else{
-#       if (match.home == 2)
-#           home_ct2 + +;
-#       else
-#           away_ct2 + +;
-#       if (match.weather == 'rainy')
-#           rainy_ct2 + +;
-#       else
-#           clear_ct2 + +;
-#       if (match.toss == 2)
-#           toss_ct2 + +;
-#       else
-#           notoss_ct2 + +;
-#   }
-#   total_matches + +;
-# }
-#
-# sum1 = 0.5 * team1.rating;
-# sum2 = 0.5 * team2.rating;
-#
-# if (current_match.home == 1){
-#   sum1 += 0.25 * home_ct1;
-#   sum2 += 0.25 * away_ct2;
-# }
-# else{
-#   sum1 += 0.25 * away_ct1;
-#   sum2 += 0.25 * home_ct2;
-# }
-# if (current_match.weather == 'rainy'){
-#   sum1 += 0.15 * rainy_ct1;
-#   sum2 += 0.15 * rainy_ct2;
-# }
-# else{
-#   sum1 += 0.15 * clear_ct1;
-#   sum2 += 0.15 * clear_ct2;
-# }
-# if (current_match.toss == 1){
-#   sum1 += 0.1 * toss_ct1;
-#   sum2 += 0.1 * notoss_ct2;
-# }
-# else{
-#   sum1 += 0.1 * notoss_ct1;
-#   sum2 += 0.1 * toss_ct2;
-# }
-#
-# if (sum1 > sum2){
-#   return 1;
-# }
-# else
-# if (sum2 > sum1){
-#   return 2;
-# }
-# else
-#   return 0;
-# return 1 means team_advantage of 1 will be 1 and 0 for zero;vice-versa if 2 returned;if 0 returned both have 0 team_advantage
-#}
+    for match in previous_matches:
+        if match.winner == 1:
+            if match.home == 1:
+                home_ct1 += 1
+            else:
+                away_ct1 += 1
+            if match.weather == 'rainy':
+                rainy_ct1 += 1
+            else:
+                clear_ct1 += 1
+            if match.toss == 1:
+                toss_ct1 += 1
+            else:
+                notoss_ct1 += 1
+        else:
+            if match.home == 2:
+                home_ct2 += 1
+            else:
+                away_ct2 += 1
+            if match.weather == 'rainy':
+                rainy_ct2 += 1
+            else:
+                clear_ct2 += 1
+            if match.toss == 2:
+                toss_ct2 += 1
+            else:
+                notoss_ct2 += 1
 
+    sum1 = 0.5 * team_1.rating
+    sum2 = 0.5 * team_2.rating
+
+    if current_match.home == 1:
+        sum1 += 0.25 * home_ct1
+        sum2 += 0.25 * away_ct2
+    else:
+        sum1 += 0.25 * away_ct1
+        sum2 += 0.25 * home_ct2
+    if current_match.weather == 'rainy':
+        sum1 += 0.15 * rainy_ct1
+        sum2 += 0.15 * rainy_ct2
+    else:
+        sum1 += 0.15 * clear_ct1
+        sum2 += 0.15 * clear_ct2
+    if current_match.toss == 1:
+        sum1 += 0.1 * toss_ct1
+        sum2 += 0.1 * notoss_ct2
+    else:
+        sum1 += 0.1 * notoss_ct1
+        sum2 += 0.1 * toss_ct2
+    # Checking which is the current team
+    if current_match.toss == 1:
+        # Current, Opposing = 1, 2
+        if sum1 > sum2:
+            return 1, 0
+        elif sum2 > sum1:
+            return 0, 1
+    else:
+        # Current, Opposing = 2, 1
+        if sum1 > sum2:
+            return 0, 1
+        elif sum2 > sum1:
+            return 1, 0
+    return 0, 0
 
 if __name__ == "__main__":
     print('\n\n\n\n')
     no_of_matches, no_of_plays = list(map(int, sys.argv[1:]))
-    team_1, team_2 = Team(1), Team(2)
+    team_1, team_2, team_advantage_1, team_advantage_2 = Team(1), Team(2), 0, 0
     team_1_stats, team_2_stats = TeamStatistics(1), TeamStatistics(2)
     matches = []
     for i in range(1, no_of_matches+1):
+        print('\n\nMatch - {}'.format(i))
         home_team_id = randint(1,2)
         away_team_id = 1 if home_team_id == 2 else 2
         toss_winner = randint(1, 2)
         weather = 'rainy' if random() < 0.5 else 'clear'
         if toss_winner == 1:
-            current_team, current_team_stats, opposing_team, opposing_team_stats = team_1, team_1_stats, team_2, team_2_stats
+            current_team, current_team_stats, current_team_advantage = team_1, team_1_stats, team_advantage_1
+            opposing_team, opposing_team_stats, opposing_team_advantage = team_2, team_2_stats, team_advantage_2
         else:
-            current_team, current_team_stats, opposing_team, opposing_team_stats = team_2, team_2_stats, team_1, team_1_stats
+            current_team, current_team_stats, current_team_advantage = team_2, team_2_stats, team_advantage_2
+            opposing_team, opposing_team_stats, opposing_team_advantage = team_1, team_1_stats, team_advantage_1
+        
+        match = MatchStatistics(i, home_team_id, away_team_id, weather, toss_winner)
+        current_team_advantage, opposing_team_advantage = calculate_team_advantage(match, matches)
         print('Current team id - {}'.format(current_team.id))
         play_count, goals = 0, {1:0, 2:0}
         current_player_id, current_player_type, current_player = choose_player(current_team, keyword='defender')
@@ -185,7 +181,8 @@ if __name__ == "__main__":
             if not foul_committed:
                 print('No foul committed in defending.')
                 # Checking if current player with possession completes action against opposing player
-                action_possible = action_complete(current_player_type ,current_player, opposing_player_type, opposing_player)
+                action_possible = action_complete(current_player_type, current_player, current_team_advantage,\
+                    opposing_player_type, opposing_player, opposing_team_advantage)
                 if action_possible:
                     opposing_team_stats.update(opposing_player_id, 'tackles', False)
                     print('Action completion is possible.')
@@ -195,7 +192,7 @@ if __name__ == "__main__":
                         foul_committed_keeper = foul(current_player, opposing_player)
                         if foul_committed_keeper:
                             print('Foul committed by Goalkeeper. Penalty!')
-                            penalty_scored = penalty(current_player, opposing_player)
+                            penalty_scored = penalty(current_player, opposing_player, current_team_advantage, opposing_team_advantage)
                             opposing_team_stats.update(11, 'tackles', 'foul')
                             if penalty_scored:
                                 print('Golaazooo!')
@@ -209,7 +206,8 @@ if __name__ == "__main__":
                                 opposing_team_stats.update(11, 'penalty_saves', True)
                         else:
                             print('Player shoots!')
-                            goal_possible = action_complete(current_player_type, current_player, opposing_player_type, opposing_player)
+                            goal_possible = action_complete(current_player_type, current_player, current_team_advantage,\
+                                opposing_player_type, opposing_player, opposing_team_advantage)
                             if goal_possible:
                                 print('Golaazooo!')
                                 goals[current_team.id] += 1
@@ -223,6 +221,7 @@ if __name__ == "__main__":
                         # Possession switch
                         play_count += 1
                         current_team, opposing_team = opposing_team, current_team
+                        current_team_advantage, opposing_team_advantage = opposing_team_advantage, current_team_advantage
                         current_team_stats, opposing_team_stats = opposing_team_stats, current_team_stats
                         current_player_obj = choose_player(current_team, keyword='defender')
                         current_player_id, current_player_type, current_player = current_player_obj
@@ -240,6 +239,7 @@ if __name__ == "__main__":
                     opposing_team_stats.update(opposing_player_id, 'tackles', True)
                     print('Lost Possession. Switching!')
                     current_team, opposing_team = opposing_team, current_team
+                    current_team_advantage, opposing_team_advantage = opposing_team_advantage, current_team_advantage
                     current_team_stats, opposing_team_stats = opposing_team_stats, current_team_stats
                     current_player, current_player_type, current_player_id = opposing_player, opposing_player_type, opposing_player_id
                     print('New current team id - {}'.format(current_team.id))
@@ -249,12 +249,13 @@ if __name__ == "__main__":
             if play_count >= no_of_plays:
                 break
         print('\nFinal score - {}\n'.format(goals))
-        matches.append(MatchStatistics(i, home_team_id, away_team_id, weather, toss_winner, 1 if goals[1] > goals[2] else 2, goals))
+        match.winner, match.score = 1 if goals[1] > goals[2] else 2, goals
+        matches.append(match)
         team_1.update(team_1_stats.stats)
         team_2.update(team_2_stats.stats)
+    
     for m in matches:
         print(m)
-
     print(team_1)
     print(team_1_stats)
     print(team_2)

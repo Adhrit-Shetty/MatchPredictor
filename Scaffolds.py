@@ -15,6 +15,7 @@ class Team():
             self.defenders.append(Defender(i, randint(60, 100)))
             i += 1
         self.goalkeeper = Goalkeeper(i, randint(60, 100))
+        self.rating = self.update_rating()
         
     def __str__(self):
         return '\nTeam {} :'.format(self.id) + \
@@ -45,6 +46,21 @@ class Team():
                 self.goalkeeper.penalty_stopping = stats[id].penalty_saves['completed'] / stats[id].penalty_saves['attempted'] if stats[id].penalty_saves['attempted'] > 0 else 0
                 self.goalkeeper.aggression = stats[id].tackles['foul'] / stats[id].tackles['attempted'] if stats[id].tackles['attempted'] > 0 else 0
                 self.goalkeeper.penalty_conversion = stats[id].penalties['completed'] / stats[id].penalties['attempted'] if stats[id].penalties['attempted'] > 0 else 0
+    
+    def update_rating(self):
+        rating = 0
+        for id in range(1, 11+1):
+            if id in range(1, 3+1): # Forward
+                rating += self.forwards[id-1].rating
+            elif id in range(4, 7+1): # Midfielder
+                rating += self.midfielders[id-4].rating
+            elif id in range(8, 10+1): # Defender
+                rating += self.defenders[id-8].rating
+            else:
+                rating += self.goalkeeper.rating
+        print('{} - {}'.format(self.id, rating))
+        return rating / 11
+
 
 class PlayerStatistics():
     def __init__(self, pid, team_id):
@@ -113,14 +129,14 @@ class TeamStatistics():
         self.stats[pid].update(attribute_name, completed)
 
 class MatchStatistics():
-    def __init__(self, id, home, away, weather, toss, winner, score):
+    def __init__(self, id, home, away, weather, toss):
         self.id = id
         self.home = home
         self.away = away 
         self.weather = weather
         self.toss = toss 
-        self.winner = winner 
-        self.score = score
+        self.winner = 0
+        self.score = {}
 
     def __str__(self):
         return '\nMatch {} :'.format(self.id) + \
